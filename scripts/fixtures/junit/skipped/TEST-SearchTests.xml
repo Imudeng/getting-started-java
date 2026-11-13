@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="SearchTests" tests="4" skipped="1" failures="0" errors="0" time="20.0">
+  <testcase name="successfulSearchTest" classname="SearchTests" time="10.0"/>
+  <testcase name="openRepositoryFromSearchResults" classname="SearchTests" time="10.0"/>
+  <testcase name="skippedCase" classname="SearchTests">
+    <skipped/>
+  </testcase>
+  <testcase name="oneMore" classname="SearchTests" time="0.1"/>
+</testsuite>

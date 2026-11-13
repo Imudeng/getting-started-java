@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="SearchTests" tests="3" skipped="0" failures="1" errors="0" time="31.5">
+  <testcase name="successfulSearchTest" classname="SearchTests" time="10.1">
+    <failure message="Element should have text NO-SUCH-REPO" type="UIAssertionError">stack</failure>
+  </testcase>
+  <testcase name="openRepositoryFromSearchResults" classname="SearchTests" time="12.2"/>
+  <testcase name="emptyStateForImpossibleQuery" classname="SearchTests" time="9.2"/>
+</testsuite>

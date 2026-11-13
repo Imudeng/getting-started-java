@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="SearchTests" tests="3" skipped="0" failures="0" errors="0" time="31.5">
+  <testcase name="successfulSearchTest" classname="SearchTests" time="10.1"/>
+  <testcase name="openRepositoryFromSearchResults" classname="SearchTests" time="12.2"/>
+  <testcase name="emptyStateForImpossibleQuery" classname="SearchTests" time="9.2"/>
+</testsuite>

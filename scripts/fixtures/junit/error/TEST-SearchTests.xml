@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="SearchTests" tests="2" skipped="0" failures="0" errors="2" time="8.0">
+  <testcase name="successfulSearchTest" classname="SearchTests" time="4.0">
+    <error message="WebDriverException" type="error">stack</error>
+  </testcase>
+  <testcase name="emptyStateForImpossibleQuery" classname="SearchTests" time="4.0">
+    <error message="WebDriverException" type="error">stack</error>
+  </testcase>
+</testsuite>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="WrappedTests" tests="3" skipped="1" failures="1" errors="0" time="9.0">
+    <testcase name="a" classname="WrappedTests" time="3.0"/>
+    <testcase name="b" classname="WrappedTests"><failure message="boom" type="AssertionError">x</failure></testcase>
+    <testcase name="c" classname="WrappedTests"><skipped/></testcase>
+  </testsuite>
+</testsuites>
