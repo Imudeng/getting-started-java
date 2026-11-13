@@ -1,0 +1,113 @@
+name: UI tests
+
+on:
+  push:
+    branches: [master, vodin_homework]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: "chrome | firefox"
+        type: choice
+        options: [chrome, firefox]
+        default: chrome
+        required: false
+      headless:
+        description: "headless"
+        type: boolean
+        default: true
+        required: false
+      baseUrl:
+        description: "base url"
+        type: string
+        default: "https://github.com"
+        required: false
+      tests:
+        description: "gradle --tests filter"
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  ui-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - uses: browser-actions/setup-chrome@48ad923757ca74d66703209fe939badbdf80f2f4 # v2.2.0
+      - name: Tool versions
+        run: java -version; google-chrome --version; chromedriver --version; node -v; python3 --version
+      - name: Compile
+        run: ./gradlew --no-daemon --console=plain compileTestJava
+      # -DnoSandbox=true: Chrome sandbox is unavailable on GitHub-hosted runners
+      # (unprivileged user namespaces disabled). Risk: weakened Chrome isolation,
+      # accepted ONLY for ephemeral CI runners; the flag never applies locally
+      # (TestBase enables it only when the system property is set).
+      - name: UI tests
+        run: >
+          ./gradlew --no-daemon --console=plain test
+          -Dbrowser=${{ inputs.browser || 'chrome' }}
+          -Dheadless=${{ inputs.headless != false }}
+          -DbaseUrl=${{ inputs.baseUrl || 'https://github.com' }}
+          -DnoSandbox=true
+          ${{ inputs.tests && format('--tests "{0}"', inputs.tests) || '' }}
+      - name: Fail if no test results
+        if: always()
+        run: |
+          total=$(grep -ho 'tests="[0-9]*"' build/test-results/test/*.xml 2>/dev/null | cut -d'"' -f2 | awk '{s+=$1} END {print s+0}')
+          echo "JUnit tests total: $total"
+          [ "$total" -gt 0 ] || { echo "::error::No test results: build error or 0 tests — not success"; exit 1; }
+      - name: Generate Allure report
+        if: always()
+        run: |
+          if [ -n "$(ls -A allure-results 2>/dev/null)" ]; then
+            npx --yes allure@3.33.0 generate allure-results -o allure-report
+          else
+            echo "No allure-results — report skipped (job status decided by test steps)"
+          fi
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: junit-xml
+          path: build/test-results/test/
+          if-no-files-found: warn
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: allure-results
+          path: allure-results
+          if-no-files-found: warn
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: allure-report
+          path: allure-report
+          if-no-files-found: warn
+      # Notification never changes the job status: script always exits 0, and
+      # continue-on-error guards against any interpreter-level surprise.
+      - name: Notify Telegram
+        if: always()
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          JOB_STATUS: ${{ job.status }}
+          PROJECT: ${{ github.repository }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          RUN_BRANCH: ${{ github.ref_name }}
+          RUN_SHA: ${{ github.sha }}
+          RUN_EVENT: ${{ github.event_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 scripts/ci_notify.py
