@@ -251,7 +251,14 @@ class NotifyTestCase(unittest.TestCase):
         self.assertNotIn(FAKE_TOKEN, out)
         self.assertNotIn(FAKE_CHAT, out)
 
-    # 17 (job failure preserved: notify exits 0 regardless => job status decided elsewhere)
+    # 17 (CI_NAME override for non-GHA platforms)
+    def test_ci_name_override(self):
+        rc, _ = self.run_notify(self.fixture("basic"), extra={"CI_NAME": "Jenkins"})
+        self.assertEqual(rc, 0)
+        _, payload = self.sent_payload()
+        self.assertIn("(Jenkins)", payload["text"])
+
+    # 18 (job failure preserved: notify exits 0 regardless => job status decided elsewhere)
     def test_exit_zero_on_all_error_modes(self):
         for mode in ("http_500", "ok_false", "unauthorized"):
             self.server.mode = mode

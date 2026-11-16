@@ -5,13 +5,15 @@ The script never changes the job status: every path exits 0 and API errors are
 logged sanitized (token/chat id are stripped from any output).
 
 Environment (non-secret): RESULT_DIR, PROJECT, WORKFLOW_NAME, RUN_BRANCH, RUN_SHA,
-RUN_EVENT, RUN_URL, JOB_STATUS, TELEGRAM_TIMEOUT, TELEGRAM_API_BASE (mock hook).
+RUN_EVENT, RUN_URL, JOB_STATUS, TELEGRAM_TIMEOUT, TELEGRAM_API_BASE (mock hook),
+CI_NAME (platform label in the message header, default "GitHub Actions").
 Environment (secret, from CI secrets only): TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID.
 """
 
 import glob
 import json
 import os
+import socket
 import sys
 import urllib.error
 import urllib.request
@@ -92,7 +94,7 @@ def decide_status(job_status, totals):
 def build_message(env, totals, status):
     sha = (env.get("RUN_SHA", "") or "")[:7]
     lines = [
-        f"{env.get('PROJECT', '?')} \u2014 {env.get('WORKFLOW_NAME', 'CI')} (GitHub Actions)",
+        f"{env.get('PROJECT', '?')} \u2014 {env.get('WORKFLOW_NAME', 'CI')} ({env.get('CI_NAME', 'GitHub Actions')})",
         f"{env.get('RUN_BRANCH', '?')} @ {sha} ({env.get('RUN_EVENT', 'push')})",
         f"\u0421\u0442\u0430\u0442\u0443\u0441: {status}",
     ]
@@ -130,6 +132,8 @@ def send(token, chat_id, text, api_base, timeout):
     except TimeoutError:
         return "timeout"
     except OSError as exc:
+        if isinstance(exc, socket.timeout) or "timed out" in str(exc).lower():
+            return "timeout"  # Python < 3.10: bare socket.timeout escapes urlopen unwrapped
         return f"network error: {exc}"
     if code != 200:
         return f"HTTP {code}"

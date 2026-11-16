@@ -3,4 +3,5 @@
 build/
 allure-results/
 allure-report/
+__pycache__/
 

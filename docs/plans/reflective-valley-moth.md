@@ -1,5 +1,8 @@
 # Рефакторинг GitHub search-тестов: page objects + fluent API
 
+> **Статус (16.11):** не реализовано — план утверждён, кода в репозитории нет (локаторы/проверки исторически остались в тестах).
+> **Ограничения:** нет.
+
 ## Согласованный стиль
 
 - **Fluent API**: методы действий возвращают следующий page object (`searchFor → SearchResultsPage`, `openRepository → RepositoryPage`), should-методы возвращают `this`.
