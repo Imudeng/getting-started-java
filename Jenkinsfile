@@ -28,19 +28,7 @@ pipeline {
                   node -v; npm -v
                   (python3 --version || echo "PYTHON3: NOT FOUND")
                   (google-chrome --version || chromium --version || chromium-browser --version || echo "CHROME: NOT FOUND")
-                  (chromedriver --version || echo "CHROMEDRIVER: NOT FOUND")
-                  ( echo "DIAG selenoid:"
-                    getent hosts selenoid.qa.guru || echo "DIAG: NO DNS for selenoid.qa.guru"
-                    curl -s -o /dev/null -w "DIAG status GET: %{http_code}\n" -u user1:1234 -m 10 https://selenoid.qa.guru/status
-                    RESP=$(curl -s -m 30 -u user1:1234 -X POST -H 'Content-Type: application/json' -d '{"capabilities":{"alwaysMatch":{"browserName":"chrome"}}}' https://selenoid.qa.guru/wd/hub/session)
-                    echo "DIAG session resp: $(echo "$RESP" | head -c 300)"
-                    SID=$(echo "$RESP" | sed -n 's/.*"sessionId":"\\([^"]*\\)".*/\\1/p')
-                    test -n "$SID" && curl -s -o /dev/null -w "DIAG session DELETE: %{http_code}\n" -u user1:1234 -X DELETE -m 10 "https://selenoid.qa.guru/wd/hub/session/$SID"
-                    RESP2=$(curl -s -m 30 -u user1:1234 -X POST -H 'Content-Type: application/json' -d '{"capabilities":{"alwaysMatch":{"browserName":"chrome","goog:chromeOptions":{"args":["--headless=new","--window-size=1920,1080"],"extensions":[]}}}}' https://selenoid.qa.guru/wd/hub/session)
-                    echo "DIAG session(headless) resp: $(echo "$RESP2" | head -c 300)"
-                    SID2=$(echo "$RESP2" | sed -n 's/.*"sessionId":"\\([^"]*\\)".*/\\1/p')
-                    test -n "$SID2" && curl -s -o /dev/null -w "DIAG session2 DELETE: %{http_code}\n" -u user1:1234 -X DELETE -m 10 "https://selenoid.qa.guru/wd/hub/session/$SID2"
-                    env | grep -iE 'java_tool_options|_java_options|proxy' || echo "DIAG: no proxy/JAVA_TOOL_OPTIONS in env" ) || true'''
+                  (chromedriver --version || echo "CHROMEDRIVER: NOT FOUND")'''
             }
         }
         stage('Compile') {
