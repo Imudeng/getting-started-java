@@ -27,6 +27,11 @@ public class TestBase {
                 options.addArguments("--no-sandbox", "--disable-dev-shm-usage");
             }
             if (remoteSet) {
+                Configuration.remote = remote.trim();
+                String version = System.getProperty("browserVersion", "").trim();
+                if (!version.isEmpty()) {
+                    Configuration.browserVersion = version;
+                }
                 // как в зелёном демо курса: CDP-сокет Selenoid изнутри агентской сети недоступен
                 options.setCapability("se:cdpEnabled", false);
                 options.setCapability("selenoid:options", Map.of("enableVNC", true, "enableVideo", false));

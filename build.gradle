@@ -28,6 +28,7 @@ tasks.withType(JavaCompile) {
 
 test {
     useJUnitPlatform()
+    testLogging { exceptionFormat = 'full' }
     systemProperty "junit.jupiter.extensions.autodetection.enabled", "true"
     jvmArgs "-javaagent:${configurations.testRuntimeClasspath.find { it.name.startsWith('aspectjweaver') }}"
     doFirst {
@@ -37,4 +38,6 @@ test {
     systemProperty "browser", System.getProperty("browser", "chrome")
     systemProperty "browserSize", System.getProperty("browserSize", "1920x1080")
     systemProperty "headless", System.getProperty("headless", "false")
+    systemProperty "remote", System.getProperty("remote", "")
+    systemProperty "browserVersion", System.getProperty("browserVersion", "")
 }
