@@ -10,6 +10,10 @@ pipeline {
         string(name: 'TESTS', defaultValue: '', description: 'gradle --tests filter (empty = all)')
         booleanParam(name: 'NO_SANDBOX', defaultValue: false,
             description: 'Chrome --no-sandbox ONLY for root/docker agents; deliberately OFF by default (not a copy of the GHA setting)')
+        string(name: 'REMOTE_URL', defaultValue: 'http://host.docker.internal:4444/wd/hub',
+            description: 'remote WebDriver grid (empty = local browser attempt; agent image has no Chrome libraries)')
+        string(name: 'BROWSER_VERSION', defaultValue: '',
+            description: 'grid browserVersion capability (empty = any registered version)')
     }
 
     options { timestamps(); disableConcurrentBuilds(); buildDiscarder(logRotator(numToKeepStr: '20')) }
@@ -31,7 +35,11 @@ pipeline {
                     echo "DIAG chrome binary: ${CH:-NONE}"
                     test -n "$CH" || exit 0
                     "$CH" --version 2>&1 | head -5
-                    ldd "$CH" 2>&1 | grep "not found" | sed "s/^/DIAG missing lib: /" ) || true'''
+                    ldd "$CH" 2>&1 | grep "not found" | sed "s/^/DIAG missing lib: /" ) || true
+                  ( echo "DIAG grid:"
+                    getent hosts host.docker.internal || echo "DIAG host.docker.internal: NO RESOLVE"
+                    curl -s -m 5 http://host.docker.internal:4444/status 2>&1 | head -c 400
+                    echo ) || true'''
             }
         }
         stage('Compile') {
@@ -42,10 +50,12 @@ pipeline {
                 script {
                     def filter  = params.TESTS?.trim() ? "--tests '${params.TESTS.trim()}'" : ''
                     def sandbox = params.NO_SANDBOX ? '-DnoSandbox=true' : ''
+                    def remote  = params.REMOTE_URL?.trim() ? "-Dremote='${params.REMOTE_URL.trim()}'" : ''
+                    def bver    = params.BROWSER_VERSION?.trim() ? "-DbrowserVersion=${params.BROWSER_VERSION.trim()}" : ''
                     env.TEST_RC = sh(returnStatus: true, script: """
                         ./gradlew --no-daemon --console=plain test \
                           -Dbrowser=${params.BROWSER} -Dheadless=${params.HEADLESS} \
-                          -DbaseUrl=${params.BASE_URL} ${sandbox} ${filter}""")
+                          -DbaseUrl=${params.BASE_URL} ${sandbox} ${remote} ${bver} ${filter}""")
                 }
             }
         }
