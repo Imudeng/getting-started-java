@@ -24,7 +24,14 @@ pipeline {
                   node -v; npm -v
                   (python3 --version || echo "PYTHON3: NOT FOUND")
                   (google-chrome --version || chromium --version || chromium-browser --version || echo "CHROME: NOT FOUND")
-                  (chromedriver --version || echo "CHROMEDRIVER: NOT FOUND")'''
+                  (chromedriver --version || echo "CHROMEDRIVER: NOT FOUND")
+                  ( echo "DIAG selenium-cache:"
+                    ls "$HOME/.cache/selenium" 2>/dev/null
+                    CH=$(find "$HOME/.cache/selenium" -type f -name chrome 2>/dev/null | head -1)
+                    echo "DIAG chrome binary: ${CH:-NONE}"
+                    test -n "$CH" || exit 0
+                    "$CH" --version 2>&1 | head -5
+                    ldd "$CH" 2>&1 | grep "not found" | sed "s/^/DIAG missing lib: /" ) || true'''
             }
         }
         stage('Compile') {
