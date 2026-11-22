@@ -152,8 +152,8 @@ def main():
     if job_status.lower() == "cancelled":
         print("notify skipped: job was cancelled")
         return 0
-    token = env.get("TELEGRAM_BOT_TOKEN", "")
-    chat_id = env.get("TELEGRAM_CHAT_ID", "")
+    token = env.get("TELEGRAM_BOT_TOKEN", "").strip()
+    chat_id = env.get("TELEGRAM_CHAT_ID", "").strip()
     if not token or not chat_id:
         print("notify skipped: TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID not set")
         return 0
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except Exception as exc:  # belt and braces: notification must never fail a job
-        for value in (os.environ.get("TELEGRAM_BOT_TOKEN", ""), os.environ.get("TELEGRAM_CHAT_ID", "")):
+        for value in (os.environ.get("TELEGRAM_BOT_TOKEN", "").strip(), os.environ.get("TELEGRAM_CHAT_ID", "").strip()):
             if value and len(value) >= 4:
                 exc = type(exc)(str(exc).replace(value, "***"))
         print(f"notify: unexpected error: {exc}")
