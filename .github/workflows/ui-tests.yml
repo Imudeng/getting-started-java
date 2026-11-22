@@ -53,13 +53,20 @@ jobs:
       # accepted ONLY for ephemeral CI runners; the flag never applies locally
       # (TestBase enables it only when the system property is set).
       - name: UI tests
+        # push events have no inputs context: env + ${VAR:-default} keeps real defaults
+        # (inputs.headless would stringify null to "false" and Chrome would start GUI)
+        env:
+          BROWSER: ${{ inputs.browser }}
+          HEADLESS: ${{ inputs.headless }}
+          BASE_URL: ${{ inputs.baseUrl }}
+          TESTS: ${{ inputs.tests }}
         run: >
           ./gradlew --no-daemon --console=plain test
-          -Dbrowser=${{ inputs.browser || 'chrome' }}
-          -Dheadless=${{ inputs.headless != false }}
-          -DbaseUrl=${{ inputs.baseUrl || 'https://github.com' }}
+          -Dbrowser=${BROWSER:-chrome}
+          -Dheadless=${HEADLESS:-true}
+          -DbaseUrl=${BASE_URL:-https://github.com}
           -DnoSandbox=true
-          ${{ inputs.tests && format('--tests "{0}"', inputs.tests) || '' }}
+          ${TESTS:+--tests "$TESTS"}
       - name: Fail if no test results
         if: always()
         run: |
