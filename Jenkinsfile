@@ -84,11 +84,18 @@ pipeline {
                 try {
                     withCredentials([string(credentialsId: 'telegram-bot-token', variable: 'TELEGRAM_BOT_TOKEN'),
                                      string(credentialsId: 'telegram-chat-id', variable: 'TELEGRAM_CHAT_ID')]) {
-                        sh """#!/bin/bash
-                          JOB_STATUS='${status}' PROJECT='${env.JOB_NAME}' WORKFLOW_NAME='Jenkins pipeline' \
-                          RUN_BRANCH='${env.GIT_BRANCH ?: 'vodin_homework'}' RUN_SHA='${env.GIT_COMMIT ?: ''}' \
-                          RUN_EVENT='jenkins' RUN_URL='${env.BUILD_URL}' CI_NAME='Jenkins' \
-                          TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID python3 scripts/ci_notify.py"""
+                        def envLine = "JOB_STATUS='${status}' PROJECT='${env.JOB_NAME}' WORKFLOW_NAME='Jenkins pipeline' " +
+                            "RUN_BRANCH='${env.GIT_BRANCH ?: 'vodin_homework'}' RUN_SHA='${env.GIT_COMMIT ?: ''}' " +
+                            "RUN_EVENT='jenkins' RUN_URL='${env.BUILD_URL}' CI_NAME='Jenkins' " +
+                            "TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID"
+                        def py = sh(returnStatus: true, script: 'command -v python3 >/dev/null 2>&1 || command -v python >/dev/null 2>&1')
+                        if (py == 0) {
+                            def pyBin = sh(returnStdout: true, script: 'command -v python3 || command -v python').trim()
+                            sh "${envLine} ${pyBin} scripts/ci_notify.py"
+                        } else {
+                            // java-агенты курса без python3 — тот же скрипт внутри лёгкого контейнера
+                            docker.image('python:3.12-slim').inside('-u root') { sh "${envLine} python scripts/ci_notify.py" }
+                        }
                     }
                 } catch (e) {
                     // нет credentials или сеть/Telegram легли — статус прогона НЕ трогаем
