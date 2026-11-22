@@ -10,8 +10,8 @@ pipeline {
         string(name: 'TESTS', defaultValue: '', description: 'gradle --tests filter (empty = all)')
         booleanParam(name: 'NO_SANDBOX', defaultValue: false,
             description: 'Chrome --no-sandbox ONLY for root/docker agents; deliberately OFF by default (not a copy of the GHA setting)')
-        string(name: 'REMOTE_URL', defaultValue: 'http://host.docker.internal:4444/wd/hub',
-            description: 'remote WebDriver grid (empty = local browser attempt; agent image has no Chrome libraries)')
+        string(name: 'REMOTE_URL', defaultValue: 'https://user1:1234@selenoid.qa.guru/wd/hub',
+            description: 'remote WebDriver (course Selenoid, shared guest creds — same as in the course demo repo; empty = local browser attempt)')
         string(name: 'BROWSER_VERSION', defaultValue: '',
             description: 'grid browserVersion capability (empty = any registered version)')
     }
@@ -28,18 +28,7 @@ pipeline {
                   node -v; npm -v
                   (python3 --version || echo "PYTHON3: NOT FOUND")
                   (google-chrome --version || chromium --version || chromium-browser --version || echo "CHROME: NOT FOUND")
-                  (chromedriver --version || echo "CHROMEDRIVER: NOT FOUND")
-                  ( echo "DIAG selenium-cache:"
-                    ls "$HOME/.cache/selenium" 2>/dev/null
-                    CH=$(find "$HOME/.cache/selenium" -type f -name chrome 2>/dev/null | head -1)
-                    echo "DIAG chrome binary: ${CH:-NONE}"
-                    test -n "$CH" || exit 0
-                    "$CH" --version 2>&1 | head -5
-                    ldd "$CH" 2>&1 | grep "not found" | sed "s/^/DIAG missing lib: /" ) || true
-                  ( echo "DIAG grid:"
-                    getent hosts host.docker.internal || echo "DIAG host.docker.internal: NO RESOLVE"
-                    curl -s -m 5 http://host.docker.internal:4444/status 2>&1 | head -c 400
-                    echo ) || true'''
+                  (chromedriver --version || echo "CHROMEDRIVER: NOT FOUND")'''
             }
         }
         stage('Compile') {
