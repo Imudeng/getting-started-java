@@ -9,7 +9,7 @@ public class SearchTests extends TestBase {
     void successfulSearchTest() {
         new SearchPage().open()
                 .searchFor("qa.guru")
-                .shouldHaveResult("QA.GURU-BROKEN-TEMP");
+                .shouldHaveResult("QA.GURU");
     }
 
     @Test
