@@ -33,17 +33,17 @@
 ## 4. Allure-отчёт и Telegram
 
 **Allure:** локальная статика `allure-report/index.html` (шаги `@Step`, вложения `.png`/`.html` на контролируемом падении) + **CI-артефакты `allure-report`/`allure-results` из Jenkins UNSTABLE-билда и Actions #11–#16** — там же скриншот упавшего теста для пакета (скачать zip артефакта с билда, открыть `index.html` → упавший тест → картинка; скриншот — действие пользователя).
-**Telegram — пример без секретов** (mock-вывод `build_message` из реального кода; хеш/URL синтетические):
+**Telegram — РЕАЛЬНОЕ сообщение получено 22.11** из GitHub Actions [run #22](https://github.com/Imudeng/getting-started-java/actions/runs/45007554956) (шаг лога: `notify: sent`), текст сгенерирован `scripts/ci_notify.py` из junit-статистики прогона:
 
 ```text
-Imudeng/getting-started-java — Jenkins pipeline (Jenkins)
-vodin_homework @ abcdef1 (jenkins)
-Статус: ❌ Тесты упали
-passed 2 · failed 1 · errors 0 · skipped 0 · total 3
-Run: https://jenkins.qa.guru/job/vodin_homework-ui-tests/N/
+Imudeng/getting-started-java — UI tests (GitHub Actions)
+vodin_homework @ 6146c49 (push)
+Статус: ✅ Все тесты зелёные
+passed 3 · failed 0 · errors 0 · skipped 0 · total 3
+Run: https://github.com/Imudeng/getting-started-java/actions/runs/45007554956
 ```
 
-Примечание: `CI_NAME` уже внесён (`1f6b268`) — Jenkins-прогоны дадут хвост «(Jenkins)», GHA — «(GitHub Actions)»; harness 18/18. Реального сообщения в Telegram нет: секреты не заведены (`[TODO]` ваш бот + Secret text `telegram-bot-token`/`telegram-chat-id`); notify на Jenkins уже обёрнут под `docker(python:3.12-slim)` — агенты курса без python3.
+Итог отладки доставки: `strip()` секретов от переносов строки (`955f9cd`), chat id из `getUpdates`. Для Jenkins тот же скрипт даёт хвост «(Jenkins)» (`CI_NAME`, `1f6b268`) и обёрнут под `docker(python:3.12-slim)` (агенты курса без python3) — отправка включится, как только админ курса заведёт Secret text `telegram-bot-token`/`telegram-chat-id` (у студенческой роли нет доступа к credentials: 403 на Manage Jenkins).
 
 ## 5. План в docs/plans/ со статусами и ограничениями — ГОТОВО
 
@@ -69,7 +69,7 @@ Run: https://jenkins.qa.guru/job/vodin_homework-ui-tests/N/
 
 1. ~~UI-тесты не проходят на ubuntu-latest~~ — **исследовано и исправлено 22.11** (`00f8029`): GitHub-выражение `inputs.headless != false` на push даёт false (null→false) → Chrome стартовал GUI-режимом на бездисплейном раннере. Зелёные runs #13/#17.
 2. Jenkins: агент курса без GUI-библиотек (24 missing lib у кэшированного Chrome-for-Testing) — браузер вынесен в курсовой Selenoid (план Б). Allure в Jenkins — архивом, не виджетом (плагины ставить нельзя). Билды/логи закрыты от анонимов (401) — доказательства через UI.
-3. Telegram-сообщение — mock-пример из кода, реальная доставка не проверялась (секреты не заведены; notify под python-docker готов).
+3. ~~Telegram-сообщение — mock~~ — **реальная доставка подтверждена 22.11** (GitHub Actions run #22, `notify: sent`). На Jenkins доставка требует credentials от админа курса (роль студента не имеет доступа к Manage Jenkins); код и python-docker-обёртка на месте, notify-skip проверен.
 4. Дефолт `REMOTE_URL` в Jenkinsfile содержит публичные курсовые креды Selenoid (`user1:1234`, те же в учебных job'ах курса) — перенос в Jenkins credentials как улучшение.
 5. Jenkins-билды не триггерятся автоматически (job без webhook) — прогоны ручные, статусы в истории сборок.
 
